@@ -47,18 +47,16 @@ def get_info():
     ydl_opts = {
         'quiet':       True,
         'no_warnings': True,
-        # ── Bot bypass for server IPs ──
+        # ── Best bot bypass for server IPs ──
         'extractor_args': {
             'youtube': {
-                'player_client': ['mweb', 'android', 'web_creator'],
-                'player_skip':   ['webpage', 'configs'],
+                'player_client': ['ios', 'tv_embedded', 'mweb'],
             }
         },
         'http_headers': {
             'User-Agent': (
-                'Mozilla/5.0 (Linux; Android 11; Pixel 5) '
-                'AppleWebKit/537.36 (KHTML, like Gecko) '
-                'Chrome/120.0.0.0 Mobile Safari/537.36'
+                'com.google.ios.youtube/19.29.1 '
+                '(iPhone16,2; U; CPU iPhone OS 17_5_1 like Mac OS X)'
             ),
         },
     }
@@ -165,16 +163,17 @@ def download_video():
             'merge_output_format': 'mp4',
             'windowsfilenames':    True,
 
-            # ── Bot detection bypass ──
+            # ── Bot detection bypass (iOS client most reliable) ──
             'extractor_args': {
                 'youtube': {
-                    'player_client': ['android', 'web'],
-                    'player_skip':   ['webpage', 'configs'],
+                    'player_client': ['ios', 'tv_embedded', 'mweb'],
                 }
             },
             'http_headers': {
                 'User-Agent': (
-                    'Mozilla/5.0 (Linux; Android 11; Pixel 5) '
+                    'com.google.ios.youtube/19.29.1 '
+                    '(iPhone16,2; U; CPU iPhone OS 17_5_1 like Mac OS X)'
+
                     'AppleWebKit/537.36 (KHTML, like Gecko) '
                     'Chrome/120.0.0.0 Mobile Safari/537.36'
                 ),
