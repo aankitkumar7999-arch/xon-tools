@@ -8,7 +8,7 @@ const API_BASE = (
   window.location.protocol === 'file:'
 )
   ? 'http://localhost:5000/api'
-  : 'https://xon-tools-api.onrender.com/api';  // 👈 Render URL yahan update karo
+  : 'https://xon-tools.onrender.com/api';
 
 
 /* ── Toast Notifications ── */
