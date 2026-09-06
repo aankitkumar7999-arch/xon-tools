@@ -12,15 +12,8 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, origins=[
-    "http://localhost",
-    "http://localhost:5000",
-    "http://127.0.0.1",
-    "null",               # file:// protocol (local browser)
-    "https://*.netlify.app",
-    "https://*.vercel.app",
-    "https://*.render.com",
-])
+CORS(app, origins="*", supports_credentials=False)
+
 
 # ── Import & Register all route blueprints ──
 from routes.youtube    import youtube_bp
