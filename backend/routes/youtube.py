@@ -4,7 +4,7 @@
 # POST /api/youtube/download → download via yt-dlp to temp, serve file
 # ==============================================================
 
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, after_this_request
 import yt_dlp
 import re
 import os
@@ -121,12 +121,11 @@ def get_info():
 @youtube_bp.route('/download', methods=['POST'])
 def download_video():
     """
-    Downloads via yt-dlp to temp file, then serves it.
-    Uses video ID as filename to avoid Windows invalid character errors.
+    Downloads via yt-dlp to temp file, serves it, then AUTO-DELETES temp files.
     """
-    data     = request.get_json(silent=True) or {}
-    url      = data.get('url', '').strip()
-    quality  = data.get('quality', '720p')
+    data    = request.get_json(silent=True) or {}
+    url     = data.get('url', '').strip()
+    quality = data.get('quality', '720p')
 
     if not url:
         return jsonify({'error': 'URL daalen'}), 400
@@ -134,38 +133,51 @@ def download_video():
         return jsonify({'error': 'Valid YouTube URL chahiye'}), 400
 
     fmt_str = FORMAT_STRINGS.get(quality, 'bestvideo+bestaudio/best')
+    tmpdir  = tempfile.mkdtemp()
 
-    tmpdir = tempfile.mkdtemp()
     try:
-        # Use video ID as filename — avoids Windows invalid char errors
         out_template = os.path.join(tmpdir, '%(id)s.%(ext)s')
 
         ydl_opts = {
-            'quiet':                True,
-            'no_warnings':          True,
-            'format':               fmt_str,
-            'outtmpl':              out_template,
-            'noplaylist':           True,
-            'merge_output_format':  'mp4',
-            'windowsfilenames':     True,   # yt-dlp built-in Windows safe names
+            'quiet':               True,
+            'no_warnings':         True,
+            'format':              fmt_str,
+            'outtmpl':             out_template,
+            'noplaylist':          True,
+            'merge_output_format': 'mp4',
+            'windowsfilenames':    True,
+
+            # ── Bot detection bypass ──
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'web'],
+                    'player_skip':   ['webpage', 'configs'],
+                }
+            },
+            'http_headers': {
+                'User-Agent': (
+                    'Mozilla/5.0 (Linux; Android 11; Pixel 5) '
+                    'AppleWebKit/537.36 (KHTML, like Gecko) '
+                    'Chrome/120.0.0.0 Mobile Safari/537.36'
+                ),
+            },
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
+            info   = ydl.extract_info(url, download=True)
             vid_id = info.get('id', 'video')
             title  = info.get('title', 'video')
 
-        # Find the downloaded file by video ID prefix
+        # Find downloaded file
         files = glob.glob(os.path.join(tmpdir, f'{vid_id}.*'))
         if not files:
             files = glob.glob(os.path.join(tmpdir, '*'))
         if not files:
-            return jsonify({'error': 'File download nahi hua — try karo dobara'}), 500
+            return jsonify({'error': 'File download nahi hua — retry karo'}), 500
 
         out_path = files[0]
         ext      = os.path.splitext(out_path)[1].lstrip('.')
 
-        # Build safe download name for browser
         safe_title = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '', title).strip()[:60] or 'video'
         dl_name    = f"{safe_title}.{ext}"
 
@@ -176,6 +188,16 @@ def download_video():
         }
         mime = mime_map.get(ext, 'application/octet-stream')
 
+        # ── Auto-delete temp folder AFTER response is sent ──
+        @after_this_request
+        def cleanup(response):
+            try:
+                import shutil
+                shutil.rmtree(tmpdir, ignore_errors=True)
+            except Exception:
+                pass
+            return response
+
         return send_file(
             out_path,
             as_attachment=True,
@@ -184,10 +206,15 @@ def download_video():
         )
 
     except yt_dlp.utils.DownloadError as e:
+        import shutil; shutil.rmtree(tmpdir, ignore_errors=True)
         err = str(e)
-        if 'Sign in' in err or 'login' in err.lower():
-            return jsonify({'error': 'Yeh video age-restricted ya private hai'}), 400
+        if 'Sign in' in err or 'bot' in err.lower():
+            return jsonify({'error': 'YouTube ne block kiya — thodi der mein try karo'}), 400
+        if 'private' in err.lower():
+            return jsonify({'error': 'Yeh video private hai'}), 400
         return jsonify({'error': err[:300]}), 400
     except Exception as e:
+        import shutil; shutil.rmtree(tmpdir, ignore_errors=True)
         return jsonify({'error': str(e)[:300]}), 500
+
 
