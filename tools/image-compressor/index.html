@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Compressor — ToolsHub</title>
+  <meta name="description" content="Images compress karo browser mein — JPG, PNG, WebP. Quality khoe bina size kam karo!" />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <style>
+    .tool-page { max-width: 820px; margin: 0 auto; padding: var(--space-xl); }
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-3xl) var(--space-xl);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--accent-purple);
+      background: rgba(108,99,255,0.06);
+    }
+    .drop-icon { font-size: 3.5rem; margin-bottom: var(--space-md); }
+
+    .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); margin-top: var(--space-lg); }
+    .preview-box { border-radius: var(--radius-lg); overflow: hidden; background: var(--bg-card); border: 1px solid var(--border); }
+    .preview-img { width: 100%; max-height: 250px; object-fit: contain; padding: var(--space-md); }
+    .preview-info { padding: var(--space-md); border-top: 1px solid var(--border); font-size: 0.82rem; color: var(--text-secondary); }
+    .savings-badge { display: inline-block; padding: 4px 12px; border-radius: var(--radius-full);
+                     background: rgba(0,255,163,0.15); color: var(--accent-green); font-weight: 700; font-size: 0.9rem; }
+
+    .format-tabs { display: flex; gap: var(--space-xs); }
+    .fmt-btn { padding: 8px 18px; border: 1px solid var(--border); border-radius: var(--radius-full);
+               background: var(--bg-card); color: var(--text-secondary); font-size: 0.85rem;
+               cursor: pointer; font-family: var(--font-body); transition: all var(--transition-fast); }
+    .fmt-btn.active, .fmt-btn:hover { border-color: var(--accent-purple); color: var(--accent-purple); background: rgba(108,99,255,0.15); }
+
+    @media (max-width: 600px) { .preview-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div><span>ToolsHub</span>
+  </a>
+  <a href="../../index.html" class="nav-back-btn">← Back to Home</a>
+</nav>
+
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon-big bg-image animate-float">🖼️</div>
+    <h1>Image Compressor</h1>
+    <p style="margin-top:8px;">Image ki size kam karo quality khoe bina — JPG, PNG, WebP support!</p>
+  </div>
+
+  <div class="card animate-fadeInUp delay-1">
+    <!-- Drop Zone -->
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('img-input').click()">
+      <div class="drop-icon">🖼️</div>
+      <h3>Image yahan drop karo</h3>
+      <p style="margin-top:4px; font-size:0.85rem;">ya click karke select karo</p>
+      <p style="margin-top:8px; font-size:0.78rem; color:var(--text-muted);">JPG, PNG, WebP — Max 20MB</p>
+    </div>
+    <input type="file" id="img-input" accept="image/*" style="display:none" onchange="onFileSelect(this.files[0])" />
+
+    <!-- Options (hidden initially) -->
+    <div id="options-section" style="display:none; margin-top: var(--space-lg);">
+      <div class="input-group">
+        <label>Quality: <strong id="quality-val">75</strong>%</label>
+        <input type="range" min="10" max="95" value="75" id="quality-slider"
+               style="width:100%; accent-color: var(--accent-purple);"
+               oninput="document.getElementById('quality-val').textContent = this.value" />
+      </div>
+
+      <div class="input-group">
+        <label>Output Format</label>
+        <div class="format-tabs">
+          <button class="fmt-btn active" onclick="setFmt(this,'JPEG')">JPEG</button>
+          <button class="fmt-btn" onclick="setFmt(this,'PNG')">PNG</button>
+          <button class="fmt-btn" onclick="setFmt(this,'WEBP')">WebP</button>
+        </div>
+      </div>
+      <input type="hidden" id="out-format" value="JPEG" />
+
+      <button class="btn btn-primary btn-full" onclick="compressImage()" id="compress-btn">
+        ⚡ Compress Image
+      </button>
+    </div>
+  </div>
+
+  <!-- Preview -->
+  <div id="preview-section" style="display:none;">
+    <div class="preview-row animate-fadeInUp delay-2">
+      <div class="preview-box">
+        <img id="original-img" class="preview-img" src="" alt="Original" />
+        <div class="preview-info">
+          <strong>Original</strong><br>
+          <span id="orig-size"></span>
+        </div>
+      </div>
+      <div class="preview-box">
+        <img id="compressed-img" class="preview-img" src="" alt="Compressed" />
+        <div class="preview-info">
+          <strong>Compressed</strong> — <span class="savings-badge" id="savings-badge"></span><br>
+          <span id="comp-size"></span>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-cyan btn-full mt-md" onclick="downloadCompressed()" id="dl-btn">
+      ⬇️ Download Compressed Image
+    </button>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>Made by <strong style="color:#F5A623">XON</strong> &nbsp;&middot;&nbsp; <a href="../../index.html">All Tools</a></p>
+</footer>
+
+<script src="../../assets/js/global.js"></script>
+<script>
+  let compressedBlob = null;
+  let compressedExt  = 'jpg';
+
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type.startsWith('image/')) onFileSelect(f);
+  });
+
+  function onFileSelect(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('original-img').src = e.target.result;
+      document.getElementById('orig-size').textContent = formatBytes(file.size);
+      document.getElementById('options-section').style.display = 'block';
+      document.getElementById('preview-section').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function setFmt(btn, fmt) {
+    document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('out-format').value = fmt;
+  }
+
+  async function compressImage() {
+    const file    = document.getElementById('img-input').files[0];
+    const quality = document.getElementById('quality-slider').value;
+    const fmt     = document.getElementById('out-format').value;
+    if (!file) { showToast('Image select karein', 'error'); return; }
+
+    const btn = document.getElementById('compress-btn');
+    setLoading(btn, true);
+
+    const formData = new FormData();
+    formData.append('image', file);
+    formData.append('quality', quality);
+    formData.append('format', fmt);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/image/compress', { method: 'POST', body: formData });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+
+      const origSize = parseInt(res.headers.get('X-Original-Size') || '0');
+      const compSize = parseInt(res.headers.get('X-Compressed-Size') || '0');
+      const savings  = res.headers.get('X-Savings-Pct') || '0';
+
+      compressedBlob = await res.blob();
+      compressedExt  = fmt === 'JPEG' ? 'jpg' : fmt.toLowerCase();
+
+      const url = URL.createObjectURL(compressedBlob);
+      document.getElementById('compressed-img').src = url;
+      document.getElementById('comp-size').textContent    = formatBytes(compSize);
+      document.getElementById('savings-badge').textContent = `${savings}% saved`;
+      document.getElementById('preview-section').style.display = 'block';
+      showToast(`Image compressed! ${savings}% size bachaya`, 'success');
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { setLoading(btn, false); }
+  }
+
+  function downloadCompressed() {
+    if (!compressedBlob) return;
+    downloadBlob(compressedBlob, `compressed.${compressedExt}`);
+    showToast('Download shuru ho gaya!', 'success');
+  }
+</script>
+</body>
+</html>

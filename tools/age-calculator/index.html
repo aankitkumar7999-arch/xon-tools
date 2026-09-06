@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Age Calculator — ToolsHub</title>
+  <meta name="description" content="Apni exact age jaano — years, months, days, hours mein. Next birthday bhi!" />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <style>
+    .tool-page { max-width: 680px; margin: 0 auto; padding: var(--space-xl); }
+    .results-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-md); margin-top: var(--space-lg); }
+    .res-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+                padding: var(--space-lg); text-align: center; transition: all var(--transition-normal); }
+    .res-card:hover { border-color: rgba(108,99,255,0.4); transform: translateY(-3px); }
+    .res-num  { font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; }
+    .res-lbl  { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    .totals-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: var(--space-md); margin-top: var(--space-md); }
+    .total-item  { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: var(--radius-md);
+                   padding: 14px; text-align: center; }
+    .total-num   { font-size: 1.1rem; font-weight: 700; color: var(--accent-cyan); }
+    .total-lbl   { font-size: 0.72rem; color: var(--text-muted); }
+    .bday-card   { margin-top: var(--space-md); background: linear-gradient(135deg, rgba(252,92,125,0.15), rgba(106,130,251,0.1));
+                   border: 1px solid rgba(252,92,125,0.3); border-radius: var(--radius-lg); padding: var(--space-lg); text-align: center; }
+    .live-clock  { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: var(--space-sm); }
+    @media (max-width: 500px) {
+      .results-grid { grid-template-columns: repeat(2,1fr); }
+      .totals-grid  { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div><span>ToolsHub</span>
+  </a>
+  <a href="../../index.html" class="nav-back-btn">← Back to Home</a>
+</nav>
+
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon-big bg-age animate-float">🎂</div>
+    <h1>Age Calculator</h1>
+    <p style="margin-top:8px;">Apni exact umar jaano aur next birthday ka countdown dekho — Instant!</p>
+  </div>
+
+  <div class="card animate-fadeInUp delay-1">
+    <div class="input-group">
+      <label>Date of Birth</label>
+      <input type="date" id="dob-input" class="input" max="" oninput="calculateAge()" />
+    </div>
+    <div class="live-clock" id="live-clock"></div>
+  </div>
+
+  <!-- Results — shown instantly on date change -->
+  <div id="results-section" style="display:none;">
+    <div class="results-grid animate-fadeInUp delay-2">
+      <div class="res-card">
+        <div class="res-num text-gradient" id="r-years">0</div>
+        <div class="res-lbl">Years</div>
+      </div>
+      <div class="res-card">
+        <div class="res-num" style="color: var(--accent-cyan);" id="r-months">0</div>
+        <div class="res-lbl">Months</div>
+      </div>
+      <div class="res-card">
+        <div class="res-num" style="color: var(--accent-pink);" id="r-days">0</div>
+        <div class="res-lbl">Days</div>
+      </div>
+    </div>
+
+    <div class="totals-grid animate-fadeInUp delay-3">
+      <div class="total-item">
+        <div class="total-num" id="r-total-days">0</div>
+        <div class="total-lbl">Total Days</div>
+      </div>
+      <div class="total-item">
+        <div class="total-num" id="r-total-weeks">0</div>
+        <div class="total-lbl">Total Weeks</div>
+      </div>
+      <div class="total-item">
+        <div class="total-num" id="r-total-months">0</div>
+        <div class="total-lbl">Total Months</div>
+      </div>
+      <div class="total-item">
+        <div class="total-num" id="r-total-hours">0</div>
+        <div class="total-lbl">Total Hours</div>
+      </div>
+    </div>
+
+    <div class="bday-card animate-fadeInUp delay-4">
+      <div style="font-size:2rem; margin-bottom:8px;">🎉</div>
+      <h3 id="r-bday-date"></h3>
+      <p id="r-bday-days" style="margin-top:4px;"></p>
+      <p id="r-born-day" style="font-size:0.82rem; margin-top:8px; color:var(--text-muted);"></p>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>Made by <strong style="color:#F5A623">XON</strong> &nbsp;&middot;&nbsp; <a href="../../index.html">All Tools</a></p>
+</footer>
+
+<script src="../../assets/js/global.js"></script>
+<script>
+  // Set max date to today
+  const todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('dob-input').max = todayStr;
+
+  // Live clock
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('live-clock').textContent =
+      'Aaj: ' + now.toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  const MONTHS = ['January','February','March','April','May','June',
+                  'July','August','September','October','November','December'];
+  const DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  function calculateAge() {
+    const val = document.getElementById('dob-input').value;
+    if (!val) return;
+
+    const dob   = new Date(val);
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    if (dob > today) { showToast('Date future mein nahi ho sakti', 'error'); return; }
+
+    // ── Years ──
+    let years = today.getFullYear() - dob.getFullYear();
+    const hadBday = (today.getMonth() > dob.getMonth()) ||
+                    (today.getMonth() === dob.getMonth() && today.getDate() >= dob.getDate());
+    if (!hadBday) years--;
+
+    // ── Months ──
+    let months = today.getMonth() - dob.getMonth();
+    if (today.getDate() < dob.getDate()) months--;
+    if (months < 0) months += 12;
+
+    // ── Days ──
+    const lastAnn = new Date(today.getFullYear(), today.getMonth(), dob.getDate());
+    if (lastAnn > today) lastAnn.setMonth(lastAnn.getMonth() - 1);
+    const days = Math.floor((today - lastAnn) / 86400000);
+
+    // ── Totals ──
+    const totalDays   = Math.floor((today - dob) / 86400000);
+    const totalWeeks  = Math.floor(totalDays / 7);
+    const totalMonths = years * 12 + months;
+    const totalHours  = totalDays * 24;
+
+    // ── Next Birthday ──
+    let nextBday = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+    if (nextBday <= today) nextBday.setFullYear(nextBday.getFullYear() + 1);
+    const daysLeft = Math.floor((nextBday - today) / 86400000);
+    const nextBdayStr = `${MONTHS[nextBday.getMonth()]} ${nextBday.getDate()}, ${nextBday.getFullYear()}`;
+
+    // ── Born weekday ──
+    const bornDay = DAYS[dob.getDay()];
+
+    // ── Update DOM ──
+    document.getElementById('r-years').textContent        = years.toLocaleString();
+    document.getElementById('r-months').textContent       = months;
+    document.getElementById('r-days').textContent         = days;
+    document.getElementById('r-total-days').textContent   = totalDays.toLocaleString();
+    document.getElementById('r-total-weeks').textContent  = totalWeeks.toLocaleString();
+    document.getElementById('r-total-months').textContent = totalMonths.toLocaleString();
+    document.getElementById('r-total-hours').textContent  = totalHours.toLocaleString();
+    document.getElementById('r-bday-date').textContent    = `Next Birthday: ${nextBdayStr}`;
+    document.getElementById('r-bday-days').textContent    = daysLeft === 0
+      ? '🎉 Aaj aapka birthday hai! Happy Birthday!'
+      : `${daysLeft} din mein aapka birthday hai!`;
+    document.getElementById('r-born-day').textContent     = `Aap ${bornDay} ko paida hue the 🗓️`;
+
+    document.getElementById('results-section').style.display = 'block';
+  }
+</script>
+</body>
+</html>

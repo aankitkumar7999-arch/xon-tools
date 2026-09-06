@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Base64 Encoder/Decoder — ToolsHub</title>
+  <meta name="description" content="Text aur files ko Base64 mein encode ya decode karo instantly — no server needed." />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <style>
+    .tool-page { max-width: 820px; margin: 0 auto; padding: var(--space-xl); }
+    .tabs { display: flex; gap: var(--space-xs); margin-bottom: var(--space-lg); }
+    .tab {
+      padding: 10px 24px; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-full); color: var(--text-secondary); font-size: 0.9rem;
+      font-weight: 500; cursor: pointer; transition: all var(--transition-fast); font-family: var(--font-body);
+    }
+    .tab.active { background: rgba(108,99,255,0.2); border-color: var(--accent-purple); color: var(--accent-purple); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .meta-row  { display: flex; gap: var(--space-md); flex-wrap: wrap; margin-top: var(--space-sm); }
+    .meta-item { font-size: 0.8rem; color: var(--text-muted); }
+    .meta-item span { color: var(--accent-cyan); font-weight: 600; }
+    .instant-badge { font-size: 0.72rem; color: var(--accent-green); background: rgba(0,255,163,0.1);
+                     border: 1px solid rgba(0,255,163,0.25); padding: 2px 10px; border-radius: var(--radius-full);
+                     margin-left: 8px; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div><span>ToolsHub</span>
+  </a>
+  <a href="../../index.html" class="nav-back-btn">← Back to Home</a>
+</nav>
+
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon-big bg-base64 animate-float">🔐</div>
+    <h1>Base64 Encoder / Decoder <span class="instant-badge">⚡ Instant</span></h1>
+    <p style="margin-top:8px;">Text aur files ko Base64 mein instantly encode/decode karo — no server needed!</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('encode')">🔐 Encode</button>
+    <button class="tab" onclick="switchTab('decode')">🔓 Decode</button>
+    <button class="tab" onclick="switchTab('file')">📁 File Encode</button>
+  </div>
+
+  <!-- Encode Panel -->
+  <div class="tab-panel active card animate-fadeInUp delay-1" id="panel-encode">
+    <div class="input-group">
+      <label>Text to Encode</label>
+      <textarea id="enc-input" class="input" rows="6"
+                placeholder="Yahan text daalen — instantly encode hoga..."
+                oninput="encodeInstant()"></textarea>
+    </div>
+    <div class="input-group">
+      <label>Encoded Result</label>
+      <textarea id="enc-output" class="input" rows="6" readonly placeholder="Result yahan aayega..."></textarea>
+    </div>
+    <div class="meta-row" id="enc-meta"></div>
+    <button class="btn btn-cyan mt-md"
+            onclick="copyToClipboard(document.getElementById('enc-output').value,'Encoded string copy ho gaya!')">
+      📋 Copy Encoded
+    </button>
+  </div>
+
+  <!-- Decode Panel -->
+  <div class="tab-panel card animate-fadeInUp delay-1" id="panel-decode">
+    <div class="input-group">
+      <label>Base64 String (Decode Karna Hai)</label>
+      <textarea id="dec-input" class="input" rows="6"
+                placeholder="Yahan Base64 string paste karein — instantly decode hoga..."
+                oninput="decodeInstant()"></textarea>
+    </div>
+    <div class="input-group">
+      <label>Decoded Result</label>
+      <textarea id="dec-output" class="input" rows="6" readonly placeholder="Result yahan aayega..."></textarea>
+    </div>
+    <div class="meta-row" id="dec-meta"></div>
+    <button class="btn btn-cyan mt-md"
+            onclick="copyToClipboard(document.getElementById('dec-output').value,'Decoded text copy ho gaya!')">
+      📋 Copy Decoded
+    </button>
+  </div>
+
+  <!-- File Encode Panel -->
+  <div class="tab-panel card animate-fadeInUp delay-1" id="panel-file">
+    <div class="input-group">
+      <label>File Upload (client-side — koi server nahi!)</label>
+      <input type="file" id="file-input" class="input" style="cursor:pointer;" onchange="encodeFileLocal()" />
+    </div>
+    <div class="input-group mt-md">
+      <label>Base64 Output</label>
+      <textarea id="file-output" class="input" rows="6" readonly placeholder="Base64 yahan aayega..."></textarea>
+    </div>
+    <div class="meta-row" id="file-meta"></div>
+    <div class="flex gap-sm mt-md">
+      <button class="btn btn-cyan"
+              onclick="copyToClipboard(document.getElementById('file-output').value,'Base64 copy ho gaya!')">📋 Copy Base64</button>
+      <button class="btn btn-secondary" id="copy-uri-btn" style="display:none" onclick="copyDataUri()">🔗 Copy Data URI</button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>Made by <strong style="color:#F5A623">XON</strong> &nbsp;&middot;&nbsp; <a href="../../index.html">All Tools</a></p>
+</footer>
+
+<script src="../../assets/js/global.js"></script>
+<script>
+  let fileDataUri = '';
+
+  function switchTab(name) {
+    const names = ['encode','decode','file'];
+    document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i] === name));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${name}`).classList.add('active');
+  }
+
+  // ── Instant Encode (no API) ──
+  function encodeInstant() {
+    const text = document.getElementById('enc-input').value;
+    if (!text) { document.getElementById('enc-output').value = ''; document.getElementById('enc-meta').innerHTML = ''; return; }
+    try {
+      const encoded = btoa(unescape(encodeURIComponent(text)));
+      document.getElementById('enc-output').value = encoded;
+      document.getElementById('enc-meta').innerHTML =
+        `<span class="meta-item">Original: <span>${text.length}</span> chars</span>
+         <span class="meta-item">Encoded: <span>${encoded.length}</span> chars</span>
+         <span class="meta-item">Overhead: <span>${((encoded.length/text.length - 1)*100).toFixed(0)}%</span></span>`;
+    } catch(e) {
+      document.getElementById('enc-output').value = 'Error: ' + e.message;
+    }
+  }
+
+  // ── Instant Decode (no API) ──
+  function decodeInstant() {
+    const enc = document.getElementById('dec-input').value.trim();
+    if (!enc) { document.getElementById('dec-output').value = ''; document.getElementById('dec-meta').innerHTML = ''; return; }
+    try {
+      const decoded = decodeURIComponent(escape(atob(enc)));
+      document.getElementById('dec-output').value = decoded;
+      document.getElementById('dec-meta').innerHTML =
+        `<span class="meta-item">Encoded: <span>${enc.length}</span> chars</span>
+         <span class="meta-item">Decoded: <span>${decoded.length}</span> chars</span>`;
+    } catch(e) {
+      document.getElementById('dec-output').value = '';
+      document.getElementById('dec-meta').innerHTML = '<span style="color:var(--accent-pink)">❌ Invalid Base64 string</span>';
+    }
+  }
+
+  // ── File Encode (FileReader — client-side) ──
+  function encodeFileLocal() {
+    const file = document.getElementById('file-input').files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showToast('File too large. Max 5MB', 'error'); return; }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      const dataUri  = e.target.result;
+      fileDataUri    = dataUri;
+      const b64part  = dataUri.split(',')[1];
+      document.getElementById('file-output').value = b64part;
+      document.getElementById('file-meta').innerHTML =
+        `<span class="meta-item">File: <span>${file.name}</span></span>
+         <span class="meta-item">Size: <span>${formatBytes(file.size)}</span></span>
+         <span class="meta-item">Type: <span>${file.type || 'unknown'}</span></span>`;
+      document.getElementById('copy-uri-btn').style.display = 'inline-flex';
+      showToast('File encode ho gayi!', 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function copyDataUri() {
+    if (!fileDataUri) return;
+    copyToClipboard(fileDataUri, 'Data URI copy ho gaya!');
+  }
+</script>
+</body>
+</html>

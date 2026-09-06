@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator — ToolsHub</title>
+  <meta name="description" content="QR code instantly banao — URL, text, contact, WiFi. Custom colors, download PNG." />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <!-- QR Library — CDN, no server needed -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    .tool-page { max-width: 760px; margin: 0 auto; padding: var(--space-xl); }
+    .qr-layout  { display: grid; grid-template-columns: 1fr auto; gap: var(--space-lg); align-items: start; }
+    .qr-preview-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); padding: var(--space-lg);
+      display: flex; flex-direction: column; align-items: center; gap: var(--space-md);
+      min-width: 240px;
+    }
+    #qr-canvas { border-radius: var(--radius-lg); overflow: hidden; }
+    #qr-canvas canvas, #qr-canvas img { border-radius: var(--radius-md); display: block; }
+    .qr-placeholder { width: 200px; height: 200px; background: rgba(255,255,255,0.05);
+                      border: 2px dashed var(--border); border-radius: var(--radius-lg);
+                      display: flex; align-items: center; justify-content: center;
+                      color: var(--text-muted); font-size: 0.85rem; text-align: center; }
+    .color-row  { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .tabs       { display: flex; gap: var(--space-xs); margin-bottom: var(--space-md); flex-wrap: wrap; }
+    .qtab       { padding: 8px 18px; background: var(--bg-card); border: 1px solid var(--border);
+                  border-radius: var(--radius-full); color: var(--text-secondary); font-size: 0.82rem;
+                  cursor: pointer; transition: all var(--transition-fast); font-family: var(--font-body); }
+    .qtab.active { border-color: var(--accent-purple); color: var(--accent-purple);
+                   background: rgba(108,99,255,0.15); }
+    .qpanel { display: none; }
+    .qpanel.active { display: block; }
+    .instant-badge { font-size: 0.72rem; color: var(--accent-green); background: rgba(0,255,163,0.1);
+                     border: 1px solid rgba(0,255,163,0.25); padding: 2px 10px; border-radius: var(--radius-full); }
+    @media (max-width: 620px) { .qr-layout { grid-template-columns: 1fr; } .qr-preview-box { min-width: unset; } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div><span>ToolsHub</span>
+  </a>
+  <a href="../../index.html" class="nav-back-btn">← Back to Home</a>
+</nav>
+
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon-big bg-qr animate-float">📱</div>
+    <span class="instant-badge">⚡ Instant — No Server</span>
+    <h1 style="margin-top:8px;">QR Code Generator</h1>
+    <p style="margin-top:8px;">URL, text, WiFi, contact — QR code instantly banao aur download karo!</p>
+  </div>
+
+  <div class="qr-layout animate-fadeInUp delay-1">
+
+    <!-- Controls -->
+    <div class="card">
+      <!-- Type Tabs -->
+      <div class="tabs">
+        <button class="qtab active" onclick="setType('url',this)">🔗 URL</button>
+        <button class="qtab" onclick="setType('text',this)">📝 Text</button>
+        <button class="qtab" onclick="setType('wifi',this)">📶 WiFi</button>
+        <button class="qtab" onclick="setType('contact',this)">👤 Contact</button>
+      </div>
+
+      <!-- URL Panel -->
+      <div class="qpanel active" id="panel-url">
+        <div class="input-group">
+          <label>URL / Link</label>
+          <input type="url" id="qr-url" class="input" placeholder="https://example.com" oninput="autoGenerate()" />
+        </div>
+      </div>
+
+      <!-- Text Panel -->
+      <div class="qpanel" id="panel-text">
+        <div class="input-group">
+          <label>Text / Message</label>
+          <textarea id="qr-text" class="input" rows="4" placeholder="Koi bhi text..." oninput="autoGenerate()"></textarea>
+        </div>
+      </div>
+
+      <!-- WiFi Panel -->
+      <div class="qpanel" id="panel-wifi">
+        <div class="input-group">
+          <label>WiFi Network Name (SSID)</label>
+          <input type="text" id="wifi-ssid" class="input" placeholder="MyHomeWiFi" oninput="autoGenerate()" />
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="text" id="wifi-pass" class="input" placeholder="WiFi password" oninput="autoGenerate()" />
+        </div>
+        <div class="input-group">
+          <label>Security Type</label>
+          <select id="wifi-type" class="input" onchange="autoGenerate()">
+            <option value="WPA">WPA/WPA2</option>
+            <option value="WEP">WEP</option>
+            <option value="nopass">Open (No Password)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Contact Panel -->
+      <div class="qpanel" id="panel-contact">
+        <div class="input-group">
+          <label>Name</label>
+          <input type="text" id="c-name" class="input" placeholder="Full Name" oninput="autoGenerate()" />
+        </div>
+        <div class="input-group">
+          <label>Phone</label>
+          <input type="tel" id="c-phone" class="input" placeholder="+91 98765 43210" oninput="autoGenerate()" />
+        </div>
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="c-email" class="input" placeholder="email@example.com" oninput="autoGenerate()" />
+        </div>
+      </div>
+
+      <!-- Styling -->
+      <div class="input-group">
+        <label>QR Size: <strong id="size-val">200</strong>px</label>
+        <input type="range" id="qr-size" min="100" max="400" step="10" value="200"
+               style="width:100%; accent-color: var(--accent-purple);"
+               oninput="document.getElementById('size-val').textContent=this.value; debouncedGenerate()" />
+      </div>
+
+      <div class="color-row">
+        <div class="input-group">
+          <label>Foreground Color</label>
+          <input type="color" id="qr-fg" value="#1a1a2e" class="input" style="height:44px; cursor:pointer;"
+                 oninput="debouncedGenerate()" />
+        </div>
+        <div class="input-group">
+          <label>Background Color</label>
+          <input type="color" id="qr-bg" value="#ffffff" class="input" style="height:44px; cursor:pointer;"
+                 oninput="debouncedGenerate()" />
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>Error Correction</label>
+        <select id="qr-err" class="input" onchange="autoGenerate()">
+          <option value="L">Low (7%)</option>
+          <option value="M" selected>Medium (15%)</option>
+          <option value="Q">Quartile (25%)</option>
+          <option value="H">High (30%)</option>
+        </select>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="generateQR()">⚡ Generate QR</button>
+    </div>
+
+    <!-- QR Preview -->
+    <div class="qr-preview-box">
+      <div id="qr-canvas">
+        <div class="qr-placeholder">📱<br>QR code<br>yahan aayega</div>
+      </div>
+      <button class="btn btn-cyan btn-full" id="dl-btn" style="display:none" onclick="downloadQR()">
+        ⬇️ Download PNG
+      </button>
+      <button class="btn btn-secondary btn-full" id="copy-btn" style="display:none"
+              onclick="copyQRToClipboard()">
+        📋 Copy to Clipboard
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <p>Made by <strong style="color:#F5A623">XON</strong> &nbsp;&middot;&nbsp; <a href="../../index.html">All Tools</a></p>
+</footer>
+
+<script src="../../assets/js/global.js"></script>
+<script>
+  let currentType = 'url';
+  let qrInstance  = null;
+  let debounceTimer = null;
+
+  function setType(type, btn) {
+    currentType = type;
+    document.querySelectorAll('.qtab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.qpanel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${type}`).classList.add('active');
+    autoGenerate();
+  }
+
+  function buildContent() {
+    const type = currentType;
+    if (type === 'url') {
+      return document.getElementById('qr-url').value.trim() || null;
+    }
+    if (type === 'text') {
+      return document.getElementById('qr-text').value.trim() || null;
+    }
+    if (type === 'wifi') {
+      const ssid = document.getElementById('wifi-ssid').value;
+      const pass = document.getElementById('wifi-pass').value;
+      const enc  = document.getElementById('wifi-type').value;
+      if (!ssid) return null;
+      return `WIFI:T:${enc};S:${ssid};P:${pass};;`;
+    }
+    if (type === 'contact') {
+      const name  = document.getElementById('c-name').value;
+      const phone = document.getElementById('c-phone').value;
+      const email = document.getElementById('c-email').value;
+      if (!name) return null;
+      return `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEMAIL:${email}\nEND:VCARD`;
+    }
+  }
+
+  function generateQR() {
+    const content = buildContent();
+    if (!content) { showToast('Content daalen pehle!', 'error'); return; }
+
+    const size   = parseInt(document.getElementById('qr-size').value);
+    const fg     = document.getElementById('qr-fg').value;
+    const bg     = document.getElementById('qr-bg').value;
+    const errMap = { L: QRCode.CorrectLevel.L, M: QRCode.CorrectLevel.M,
+                     Q: QRCode.CorrectLevel.Q, H: QRCode.CorrectLevel.H };
+    const errLvl = errMap[document.getElementById('qr-err').value];
+
+    // Clear previous
+    const canvas = document.getElementById('qr-canvas');
+    canvas.innerHTML = '';
+
+    try {
+      qrInstance = new QRCode(canvas, {
+        text: content, width: size, height: size,
+        colorDark: fg, colorLight: bg,
+        correctLevel: errLvl,
+      });
+
+      document.getElementById('dl-btn').style.display   = 'block';
+      document.getElementById('copy-btn').style.display = 'block';
+      showToast('QR Code generate ho gaya!', 'success');
+    } catch(e) {
+      canvas.innerHTML = '<div style="color:var(--accent-pink);padding:16px;text-align:center">❌ QR generate nahi hua<br>' + e.message + '</div>';
+    }
+  }
+
+  function autoGenerate() {
+    const content = buildContent();
+    if (content) generateQR();
+  }
+
+  function debouncedGenerate() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(autoGenerate, 300);
+  }
+
+  function getQRCanvas() {
+    const img = document.getElementById('qr-canvas').querySelector('img');
+    const cvs = document.getElementById('qr-canvas').querySelector('canvas');
+    if (cvs) return cvs;
+    if (img) {
+      // Draw img to canvas
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      return c;
+    }
+    return null;
+  }
+
+  function downloadQR() {
+    const cvs = getQRCanvas();
+    if (!cvs) { showToast('QR pehle generate karo', 'error'); return; }
+    const link = document.createElement('a');
+    link.download = 'qrcode.png';
+    link.href = cvs.toDataURL('image/png');
+    link.click();
+    showToast('QR downloaded!', 'success');
+  }
+
+  function copyQRToClipboard() {
+    const cvs = getQRCanvas();
+    if (!cvs) { showToast('QR pehle generate karo', 'error'); return; }
+    cvs.toBlob(blob => {
+      navigator.clipboard.write([new ClipboardItem({'image/png': blob})])
+        .then(() => showToast('QR clipboard mein copy ho gaya!', 'success'))
+        .catch(() => showToast('Copy nahi hua — use download button', 'error'));
+    });
+  }
+</script>
+</body>
+</html>

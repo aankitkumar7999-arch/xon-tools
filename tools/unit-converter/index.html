@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit Converter — ToolsHub</title>
+  <meta name="description" content="Length, weight, temperature, speed, area, volume, data — instant, no server needed!" />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <style>
+    .tool-page { max-width: 700px; margin: 0 auto; padding: var(--space-xl); }
+    .cat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--space-sm); margin-bottom: var(--space-lg); }
+    .cat-card { padding: 12px 8px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);
+                text-align: center; cursor: pointer; transition: all var(--transition-fast); font-family: var(--font-body); font-size: 0.8rem; }
+    .cat-card:hover, .cat-card.active { border-color: var(--accent-purple); background: rgba(108,99,255,0.15); color: var(--accent-purple); font-weight: 600; }
+    .cat-card .cat-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+    .converter-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--space-md); align-items: end; }
+    .swap-btn { padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
+                background: var(--bg-card); font-size: 1.2rem; cursor: pointer; transition: all var(--transition-normal); }
+    .swap-btn:hover { border-color: var(--accent-purple); transform: rotate(180deg); }
+    .result-big { font-size: 1.5rem; font-weight: 800; text-align: center; padding: var(--space-lg);
+                  background: rgba(0,0,0,0.3); border-radius: var(--radius-lg); margin-top: var(--space-md);
+                  color: var(--accent-cyan); font-family: 'Courier New', monospace; word-break: break-all; }
+    @media (max-width: 580px) {
+      .cat-grid { grid-template-columns: repeat(3,1fr); }
+      .converter-row { grid-template-columns: 1fr; }
+      .swap-btn { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div><span>ToolsHub</span>
+  </a>
+  <a href="../../index.html" class="nav-back-btn">← Back to Home</a>
+</nav>
+
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon-big bg-converter animate-float">📏</div>
+    <h1>Unit Converter</h1>
+    <p style="margin-top:8px;">Length, weight, temperature aur aur bhi — instantly, no server!</p>
+  </div>
+
+  <!-- Category -->
+  <div class="cat-grid animate-fadeInUp delay-1">
+    <button class="cat-card active" data-cat="length" onclick="setCategory('length',this)">
+      <span class="cat-icon">📏</span>Length</button>
+    <button class="cat-card" data-cat="weight" onclick="setCategory('weight',this)">
+      <span class="cat-icon">⚖️</span>Weight</button>
+    <button class="cat-card" data-cat="temperature" onclick="setCategory('temperature',this)">
+      <span class="cat-icon">🌡️</span>Temp</button>
+    <button class="cat-card" data-cat="speed" onclick="setCategory('speed',this)">
+      <span class="cat-icon">💨</span>Speed</button>
+    <button class="cat-card" data-cat="area" onclick="setCategory('area',this)">
+      <span class="cat-icon">🗺️</span>Area</button>
+    <button class="cat-card" data-cat="volume" onclick="setCategory('volume',this)">
+      <span class="cat-icon">💧</span>Volume</button>
+    <button class="cat-card" data-cat="data" onclick="setCategory('data',this)">
+      <span class="cat-icon">💾</span>Data</button>
+  </div>
+
+  <div class="card animate-fadeInUp delay-2">
+    <div class="converter-row">
+      <div>
+        <div class="input-group">
+          <label>Value</label>
+          <input type="number" id="conv-value" class="input" value="1" oninput="convert()" />
+        </div>
+        <div class="input-group">
+          <label>From</label>
+          <select id="from-unit" class="input" onchange="convert()"></select>
+        </div>
+      </div>
+      <button class="swap-btn" onclick="swapUnits()" title="Swap">⇄</button>
+      <div>
+        <div class="input-group">
+          <label>&nbsp;</label>
+          <input type="number" id="result-val" class="input" readonly placeholder="Result..." />
+        </div>
+        <div class="input-group">
+          <label>To</label>
+          <select id="to-unit" class="input" onchange="convert()"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-big" id="result-display">—</div>
+
+    <button class="btn btn-cyan btn-full mt-md"
+            onclick="copyToClipboard(document.getElementById('result-val').value,'Result copy ho gaya!')">
+      📋 Copy Result
+    </button>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>Made by <strong style="color:#F5A623">XON</strong> &nbsp;&middot;&nbsp; <a href="../../index.html">All Tools</a></p>
+</footer>
+
+<script src="../../assets/js/global.js"></script>
+<script>
+  // All conversion factors (relative to base unit)
+  const UNITS = {
+    length: {
+      base: 'meter',
+      units: { meter:1, kilometer:1000, centimeter:0.01, millimeter:0.001,
+                mile:1609.344, yard:0.9144, foot:0.3048, inch:0.0254, 'nautical mile':1852 }
+    },
+    weight: {
+      base: 'kilogram',
+      units: { kilogram:1, gram:0.001, milligram:0.000001, tonne:1000,
+                pound:0.453592, ounce:0.0283495, stone:6.35029 }
+    },
+    speed: {
+      base: 'm/s',
+      units: { 'm/s':1, 'km/h':0.277778, 'mph':0.44704, 'knot':0.514444, 'ft/s':0.3048 }
+    },
+    area: {
+      base: 'sq meter',
+      units: { 'sq meter':1, 'sq kilometer':1e6, 'sq centimeter':0.0001,
+                'sq foot':0.092903, 'sq inch':0.00064516, acre:4046.86, hectare:10000 }
+    },
+    volume: {
+      base: 'liter',
+      units: { liter:1, milliliter:0.001, 'cubic meter':1000,
+                'gallon (US)':3.78541, 'gallon (UK)':4.54609,
+                'fluid ounce':0.0295735, cup:0.236588, pint:0.473176 }
+    },
+    data: {
+      base: 'byte',
+      units: { byte:1, kilobyte:1024, megabyte:1048576, gigabyte:1073741824,
+                terabyte:1099511627776, bit:0.125, kilobit:128, megabit:131072 }
+    },
+    temperature: { special: true, units: ['Celsius','Fahrenheit','Kelvin'] }
+  };
+
+  let currentCat = 'length';
+
+  function setCategory(cat, btn) {
+    document.querySelectorAll('.cat-card').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCat = cat;
+    populateSelects(cat);
+    convert();
+  }
+
+  function populateSelects(cat) {
+    const from = document.getElementById('from-unit');
+    const to   = document.getElementById('to-unit');
+    const keys = UNITS[cat].special ? UNITS[cat].units : Object.keys(UNITS[cat].units);
+    from.innerHTML = keys.map(u => `<option value="${u}">${u}</option>`).join('');
+    to.innerHTML   = keys.map((u,i) => `<option value="${u}" ${i===1?'selected':''}>${u}</option>`).join('');
+  }
+
+  function convertTemp(val, from, to) {
+    let c = from === 'Celsius' ? val : from === 'Fahrenheit' ? (val-32)*5/9 : val-273.15;
+    return to === 'Celsius' ? c : to === 'Fahrenheit' ? c*9/5+32 : c+273.15;
+  }
+
+  function convert() {
+    const val  = parseFloat(document.getElementById('conv-value').value);
+    const from = document.getElementById('from-unit').value;
+    const to   = document.getElementById('to-unit').value;
+    if (isNaN(val)) return;
+
+    let result;
+    if (UNITS[currentCat].special) {
+      result = convertTemp(val, from, to);
+    } else {
+      const units = UNITS[currentCat].units;
+      result = (val * units[from]) / units[to];
+    }
+
+    const formatted = Math.abs(result) < 0.0001 || Math.abs(result) > 1e10
+      ? result.toExponential(6) : parseFloat(result.toFixed(8)).toString();
+
+    document.getElementById('result-val').value      = formatted;
+    document.getElementById('result-display').textContent = `${val} ${from} = ${formatted} ${to}`;
+  }
+
+  function swapUnits() {
+    const from = document.getElementById('from-unit');
+    const to   = document.getElementById('to-unit');
+    const tmp  = from.value; from.value = to.value; to.value = tmp;
+    convert();
+  }
+
+  // Init
+  populateSelects('length');
+  convert();
+</script>
+</body>
+</html>

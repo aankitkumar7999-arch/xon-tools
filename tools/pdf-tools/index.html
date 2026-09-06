@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Tools — ToolsHub</title>
+  <meta name="description" content="PDF ka info, metadata, page count aur text extract karo instantly." />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <style>
+    .tool-page { max-width: 780px; margin: 0 auto; padding: var(--space-xl); }
+    .drop-zone { border: 2px dashed var(--border); border-radius: var(--radius-xl); padding: var(--space-2xl) var(--space-xl);
+                 text-align: center; cursor: pointer; transition: all var(--transition-normal); }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent-purple); background: rgba(108,99,255,0.06); }
+    .info-table { width: 100%; border-collapse: collapse; }
+    .info-table tr { border-bottom: 1px solid var(--border); }
+    .info-table tr:last-child { border-bottom: none; }
+    .info-table td { padding: 10px 12px; font-size: 0.88rem; }
+    .info-table td:first-child { color: var(--text-muted); width: 40%; }
+    .info-table td:last-child { color: var(--text-primary); font-weight: 500; }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div><span>ToolsHub</span>
+  </a>
+  <a href="../../index.html" class="nav-back-btn">← Back to Home</a>
+</nav>
+
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon-big bg-pdf animate-float">📄</div>
+    <h1>PDF Tools</h1>
+    <p style="margin-top:8px;">PDF ka metadata, page count, aur text preview instantly dekho!</p>
+  </div>
+
+  <div class="card animate-fadeInUp delay-1">
+    <div class="drop-zone" id="drop-zone" onclick="document.getElementById('pdf-input').click()">
+      <div style="font-size:3rem; margin-bottom: var(--space-md);">📄</div>
+      <h3>PDF file yahan drop karo</h3>
+      <p style="font-size:0.85rem; margin-top:4px;">ya click karke select karo</p>
+    </div>
+    <input type="file" id="pdf-input" accept=".pdf" style="display:none" onchange="analyzePDF(this.files[0])" />
+    <button class="btn btn-primary btn-full mt-md" onclick="document.getElementById('pdf-input').click()" id="upload-btn">
+      📄 Select PDF File
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div id="results-section" style="display:none;" class="animate-fadeInUp delay-2">
+    <div class="card mt-md">
+      <h4 style="margin-bottom: var(--space-md);">📋 PDF Information</h4>
+      <table class="info-table" id="info-table"></table>
+    </div>
+
+    <div class="card mt-md">
+      <h4 style="margin-bottom: var(--space-md);">📝 Text Preview (First 3 Pages)</h4>
+      <div class="result-box" id="text-preview" style="max-height:300px; overflow-y:auto; white-space:pre-wrap; color: var(--text-secondary);"></div>
+      <button class="btn btn-cyan mt-md"
+              onclick="copyToClipboard(document.getElementById('text-preview').textContent, 'Text copy ho gaya!')">
+        📋 Copy Text
+      </button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>Made by <strong style="color:#F5A623">XON</strong> &nbsp;&middot;&nbsp; <a href="../../index.html">All Tools</a></p>
+</footer>
+
+<script src="../../assets/js/global.js"></script>
+<script>
+  const dropZone = document.getElementById('drop-zone');
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.name.endsWith('.pdf')) analyzePDF(f);
+    else showToast('Sirf PDF files allowed hain', 'error');
+  });
+
+  async function analyzePDF(file) {
+    const btn = document.getElementById('upload-btn');
+    setLoading(btn, true);
+    const formData = new FormData();
+    formData.append('pdf', file);
+    try {
+      const res  = await fetch('http://localhost:5000/api/pdf/info', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      const rows = [
+        ['File Name',   file.name],
+        ['File Size',   formatBytes(data.file_size)],
+        ['Pages',       data.page_count],
+        ['Title',       data.title],
+        ['Author',      data.author],
+        ['Subject',     data.subject],
+        ['Creator',     data.creator],
+        ['Producer',    data.producer],
+        ['Page Size',   data.page_width ? `${data.page_width} × ${data.page_height} pt` : 'N/A'],
+        ['Word Count',  data.word_count?.toLocaleString() || '0'],
+        ['Encrypted',   data.encrypted ? '🔒 Yes' : '🔓 No'],
+        ['Created',     data.created],
+      ];
+
+      const table = document.getElementById('info-table');
+      table.innerHTML = rows.map(([k,v]) =>
+        `<tr><td>${k}</td><td>${v || 'N/A'}</td></tr>`
+      ).join('');
+
+      document.getElementById('text-preview').textContent = data.text_preview || 'Text extract nahi hua.';
+      document.getElementById('results-section').style.display = 'block';
+      showToast('PDF analysis complete!', 'success');
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { setLoading(btn, false); }
+  }
+</script>
+</body>
+</html>

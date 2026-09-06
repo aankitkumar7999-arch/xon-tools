@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ToolsHub — All-in-One Online Tools</title>
+  <meta name="description" content="ToolsHub: 10+ powerful online tools — YouTube Downloader, Image Compressor, QR Generator, Password Generator & more. Fast, free, no signup needed!" />
+  <link rel="stylesheet" href="assets/css/global.css" />
+  <style>
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      min-height: 90vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: var(--space-xl);
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(108,99,255,0.25) 0%, transparent 70%),
+                  radial-gradient(ellipse 60% 40% at 80% 80%, rgba(0,212,255,0.12) 0%, transparent 60%),
+                  var(--bg-primary);
+      z-index: 0;
+    }
+
+    .hero-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+    }
+    .orb-1 {
+      width: 400px; height: 400px;
+      top: -100px; left: -100px;
+      background: rgba(108,99,255,0.15);
+      animation: float 6s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 300px; height: 300px;
+      bottom: -50px; right: -50px;
+      background: rgba(0,212,255,0.1);
+      animation: float 8s ease-in-out infinite reverse;
+    }
+    .orb-3 {
+      width: 200px; height: 200px;
+      top: 40%; left: 60%;
+      background: rgba(255,107,157,0.08);
+      animation: float 5s ease-in-out infinite 1s;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: 8px 18px;
+      background: rgba(108,99,255,0.12);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--accent-purple);
+      margin-bottom: var(--space-lg);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .hero-title {
+      margin-bottom: var(--space-md);
+      animation: fadeInUp 0.6s ease 0.1s forwards;
+      opacity: 0;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-xl);
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      animation: fadeInUp 0.6s ease 0.2s forwards;
+      opacity: 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeInUp 0.6s ease 0.3s forwards;
+      opacity: 0;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: var(--space-xl);
+      justify-content: center;
+      margin-top: var(--space-2xl);
+      animation: fadeInUp 0.6s ease 0.4s forwards;
+      opacity: 0;
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+    .stat-number {
+      font-family: var(--font-heading);
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #6C63FF, #00D4FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* ── Search Bar ── */
+    .search-section {
+      max-width: 600px;
+      margin: 0 auto var(--space-2xl);
+      padding: 0 var(--space-xl);
+    }
+
+    .search-wrapper {
+      position: relative;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.1rem;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    #search-input {
+      padding-left: 50px;
+      padding-right: 130px;
+      height: 56px;
+      border-radius: var(--radius-full);
+      font-size: 1rem;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+    }
+    #search-input:focus {
+      border-color: var(--accent-purple);
+      box-shadow: 0 0 0 3px rgba(108,99,255,0.15), 0 4px 30px rgba(108,99,255,0.2);
+    }
+
+    .search-count {
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.05);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+    }
+
+    /* ── Categories Filter ── */
+    .categories {
+      display: flex;
+      gap: var(--space-sm);
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: var(--space-2xl);
+      padding: 0 var(--space-xl);
+    }
+
+    .cat-btn {
+      padding: 8px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      font-family: var(--font-body);
+    }
+    .cat-btn:hover, .cat-btn.active {
+      background: rgba(108,99,255,0.15);
+      border-color: var(--accent-purple);
+      color: var(--accent-purple);
+    }
+
+    /* ── Tools Grid ── */
+    .tools-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--space-xl) var(--space-3xl);
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: var(--space-lg);
+    }
+
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-lg);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--grad-card);
+      opacity: 0;
+      transition: opacity var(--transition-normal);
+      border-radius: var(--radius-xl);
+    }
+
+    .tool-card:hover {
+      border-color: rgba(108,99,255,0.4);
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .tool-card:hover::before { opacity: 1; }
+
+    .tool-card-inner { position: relative; z-index: 1; }
+
+    .tool-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: var(--space-md);
+      transition: transform var(--transition-normal);
+    }
+
+    .tool-card:hover .tool-icon { transform: scale(1.1) rotate(5deg); }
+
+    .tool-card h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: var(--space-xs);
+      color: var(--text-primary);
+    }
+
+    .tool-card p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-md);
+      line-height: 1.5;
+    }
+
+    .tool-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tool-open-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.3);
+      border-radius: var(--radius-full);
+      color: var(--accent-purple);
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all var(--transition-fast);
+    }
+
+    .tool-card:hover .tool-open-btn {
+      background: var(--grad-purple);
+      border-color: transparent;
+      color: #fff;
+    }
+
+    /* Tool icon backgrounds */
+    .bg-youtube   { background: linear-gradient(135deg, #FF0000, #FF4444); }
+    .bg-image     { background: linear-gradient(135deg, #FF6B9D, #C44DEE); }
+    .bg-pdf       { background: linear-gradient(135deg, #FF7043, #F4511E); }
+    .bg-text      { background: linear-gradient(135deg, #43E97B, #38F9D7); }
+    .bg-color     { background: linear-gradient(135deg, #F9D423, #FF4E50); }
+    .bg-qr        { background: linear-gradient(135deg, #4776E6, #8E54E9); }
+    .bg-password  { background: linear-gradient(135deg, #00D4FF, #0099FF); }
+    .bg-converter { background: linear-gradient(135deg, #FDBB2D, #22C1C3); }
+    .bg-age       { background: linear-gradient(135deg, #FC5C7D, #6A82FB); }
+    .bg-base64    { background: linear-gradient(135deg, #00FFA3, #00B4D8); }
+
+    /* ── No results ── */
+    .no-results {
+      text-align: center;
+      padding: var(--space-3xl);
+      color: var(--text-muted);
+      display: none;
+      grid-column: 1/-1;
+    }
+
+    .no-results .emoji { font-size: 3rem; margin-bottom: var(--space-md); }
+
+    /* ── Featured Banner ── */
+    .featured-banner {
+      background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,212,255,0.1));
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl) var(--space-2xl);
+      margin: 0 var(--space-xl) var(--space-2xl);
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-lg);
+      flex-wrap: wrap;
+    }
+
+    .featured-text h3 {
+      font-size: 1.4rem;
+      margin-bottom: var(--space-xs);
+    }
+    .featured-text p {
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      .tools-grid { grid-template-columns: 1fr; gap: var(--space-md); }
+      .hero-stats { gap: var(--space-lg); }
+      .stat-number { font-size: 1.5rem; }
+      .featured-banner { flex-direction: column; margin: 0 var(--space-md) var(--space-xl); }
+      .search-section { padding: 0 var(--space-md); }
+      .categories, .tools-section { padding: 0 var(--space-md) var(--space-xl); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div>
+    <span>ToolsHub</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#tools">All Tools</a></li>
+    <li><a href="https://github.com" target="_blank">GitHub</a></li>
+  </ul>
+  <a href="#tools" class="btn btn-primary btn-sm">Explore Tools →</a>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-orb orb-1"></div>
+  <div class="hero-orb orb-2"></div>
+  <div class="hero-orb orb-3"></div>
+
+  <div class="hero-content">
+    <div class="hero-badge">⚡ 10+ Powerful Tools — Free & Fast</div>
+
+    <h1 class="hero-title">
+      Your All-in-One<br />
+      <span class="text-gradient">Online Toolkit</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      YouTube download se lekar Image compression tak — sab kuch ek jagah.
+      No signup, no ads, no nonsense. Bas kaam karo! 🚀
+    </p>
+
+    <div class="hero-actions">
+      <a href="#tools" class="btn btn-primary btn-lg">🛠️ Explore Tools</a>
+      <a href="tools/youtube-downloader/index.html" class="btn btn-secondary btn-lg">📹 YouTube Downloader</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-number">10+</div>
+        <div class="stat-label">Tools Available</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">Free to Use</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">0</div>
+        <div class="stat-label">Signup Required</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">⚡</div>
+        <div class="stat-label">Super Fast</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Featured Tool ── -->
+<div class="featured-banner">
+  <div class="featured-text">
+    <span class="badge badge-cyan">🔥 Most Popular</span>
+    <h3 style="margin-top: 8px;">YouTube Video Downloader</h3>
+    <p>Kisi bhi YouTube video ko seconds mein download karo — HD quality mein!</p>
+  </div>
+  <a href="tools/youtube-downloader/index.html" class="btn btn-cyan btn-lg">
+    📹 Download Now →
+  </a>
+</div>
+
+<!-- ── Search ── -->
+<div class="search-section" id="tools">
+  <div class="search-wrapper">
+    <span class="search-icon">🔍</span>
+    <input
+      type="text"
+      id="search-input"
+      class="input"
+      placeholder="Search tools... (e.g. YouTube, QR, Password)"
+      autocomplete="off"
+    />
+    <span class="search-count" id="search-count">10 tools</span>
+  </div>
+</div>
+
+<!-- ── Category Filter ── -->
+<div class="categories">
+  <button class="cat-btn active" data-cat="all">All Tools</button>
+  <button class="cat-btn" data-cat="download">Download</button>
+  <button class="cat-btn" data-cat="image">Image</button>
+  <button class="cat-btn" data-cat="text">Text & Code</button>
+  <button class="cat-btn" data-cat="generator">Generator</button>
+  <button class="cat-btn" data-cat="converter">Converter</button>
+  <button class="cat-btn" data-cat="utility">Utility</button>
+</div>
+
+<!-- ── Tools Grid ── -->
+<div class="tools-section">
+  <div class="tools-grid" id="tools-grid">
+
+    <!-- YouTube Downloader -->
+    <a class="tool-card delay-1 animate-fadeInUp"
+       href="tools/youtube-downloader/index.html"
+       data-cat="download" data-name="YouTube Video Downloader download video audio">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-youtube">📹</div>
+        <h3>YouTube Downloader</h3>
+        <p>Kisi bhi YouTube video ya audio ko fast aur HD quality mein download karo.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-pink">🔥 Popular</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Image Compressor -->
+    <a class="tool-card delay-2 animate-fadeInUp"
+       href="tools/image-compressor/index.html"
+       data-cat="image" data-name="Image Compressor compress reduce size photo">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-image">🖼️</div>
+        <h3>Image Compressor</h3>
+        <p>Image ki size kam karo quality khoe bina. JPG, PNG, WebP support.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-purple">Image</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- PDF Tools -->
+    <a class="tool-card delay-3 animate-fadeInUp"
+       href="tools/pdf-tools/index.html"
+       data-cat="image" data-name="PDF Tools PDF info metadata viewer">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-pdf">📄</div>
+        <h3>PDF Tools</h3>
+        <p>PDF ka metadata dekho, pages count karo, aur file info extract karo.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-cyan">PDF</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Text Tools -->
+    <a class="tool-card delay-4 animate-fadeInUp"
+       href="tools/text-tools/index.html"
+       data-cat="text" data-name="Text Tools word count character uppercase lowercase case converter">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-text">✏️</div>
+        <h3>Text Tools</h3>
+        <p>Word count, character count, case converter, duplicate remover aur bahut kuch.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-green">Text</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Color Picker -->
+    <a class="tool-card delay-5 animate-fadeInUp"
+       href="tools/color-picker/index.html"
+       data-cat="generator" data-name="Color Picker palette HEX RGB HSL generator designer">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-color">🎨</div>
+        <h3>Color Picker</h3>
+        <p>Beautiful color palettes banao. HEX, RGB, HSL — sab formats mein convert karo.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-pink">Design</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- QR Generator -->
+    <a class="tool-card delay-1 animate-fadeInUp"
+       href="tools/qr-generator/index.html"
+       data-cat="generator" data-name="QR Code Generator create scan URL text barcode">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-qr">📱</div>
+        <h3>QR Code Generator</h3>
+        <p>Kisi bhi URL ya text ka instant QR code banao. Download bhi karo PNG mein.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-purple">Generator</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Password Generator -->
+    <a class="tool-card delay-2 animate-fadeInUp"
+       href="tools/password-generator/index.html"
+       data-cat="generator" data-name="Password Generator strong secure random">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-password">🔒</div>
+        <h3>Password Generator</h3>
+        <p>Ultra-strong passwords banao custom length aur character options ke saath.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-cyan">Security</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Unit Converter -->
+    <a class="tool-card delay-3 animate-fadeInUp"
+       href="tools/unit-converter/index.html"
+       data-cat="converter" data-name="Unit Converter length weight temperature speed km miles kg">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-converter">📏</div>
+        <h3>Unit Converter</h3>
+        <p>Length, weight, temperature, speed — har unit ko convert karo instantly.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-green">Converter</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Age Calculator -->
+    <a class="tool-card delay-4 animate-fadeInUp"
+       href="tools/age-calculator/index.html"
+       data-cat="utility" data-name="Age Calculator birthday birthdate exact age years months days">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-age">🎂</div>
+        <h3>Age Calculator</h3>
+        <p>Apni exact umar jaano — years, months, days, aur hours mein bhi!</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-pink">Utility</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- Base64 Encoder -->
+    <a class="tool-card delay-5 animate-fadeInUp"
+       href="tools/base64-encoder/index.html"
+       data-cat="text" data-name="Base64 Encoder Decoder encode decode string developer">
+      <div class="tool-card-inner">
+        <div class="tool-icon bg-base64">🔐</div>
+        <h3>Base64 Encoder</h3>
+        <p>Text ko Base64 mein encode karo ya Base64 se decode karo — developers ke liye.</p>
+        <div class="tool-card-footer">
+          <span class="badge badge-green">Dev Tool</span>
+          <span class="tool-open-btn">Open Tool →</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- No results -->
+    <div class="no-results" id="no-results">
+      <div class="emoji">🔍</div>
+      <h3>Koi tool nahi mila</h3>
+      <p>Alag keyword try karein</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <p style="font-size:0.92rem;">
+    Made by &nbsp;<strong style="color:#F5A623; font-size:1rem; letter-spacing:0.05em;">XON</strong>
+    &nbsp;&middot;&nbsp;
+    <a href="tools/youtube-downloader/index.html">YouTube</a>
+    &nbsp;&middot;&nbsp;
+    <a href="tools/qr-generator/index.html">QR Code</a>
+    &nbsp;&middot;&nbsp;
+    <a href="tools/password-generator/index.html">Password</a>
+    &nbsp;&middot;&nbsp;
+    <a href="tools/age-calculator/index.html">Age Calc</a>
+  </p>
+  <p style="margin-top:6px; font-size:0.75rem; color:rgba(255,255,255,0.2);">
+    &copy; 2024 XON &nbsp;&middot;&nbsp; All rights reserved
+  </p>
+</footer>
+
+<script src="assets/js/global.js"></script>
+<script>
+  // ── Search & Filter ──
+  const searchInput = document.getElementById('search-input');
+  const searchCount = document.getElementById('search-count');
+  const toolCards   = document.querySelectorAll('.tool-card');
+  const noResults   = document.getElementById('no-results');
+  const catBtns     = document.querySelectorAll('.cat-btn');
+
+  let activeCategory = 'all';
+
+  function filterTools() {
+    const query = searchInput.value.toLowerCase().trim();
+    let visible = 0;
+
+    toolCards.forEach(card => {
+      const name = (card.dataset.name || '').toLowerCase();
+      const cat  = card.dataset.cat || '';
+      const matchSearch = !query || name.includes(query);
+      const matchCat    = activeCategory === 'all' || cat === activeCategory;
+
+      if (matchSearch && matchCat) {
+        card.style.display = 'block';
+        visible++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    searchCount.textContent = `${visible} tool${visible !== 1 ? 's' : ''}`;
+    noResults.style.display = visible === 0 ? 'block' : 'none';
+  }
+
+  searchInput.addEventListener('input', filterTools);
+
+  catBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      catBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeCategory = btn.dataset.cat;
+      filterTools();
+    });
+  });
+</script>
+</body>
+</html>

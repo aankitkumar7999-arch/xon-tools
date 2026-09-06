@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text Tools — ToolsHub</title>
+  <meta name="description" content="Word count, character count, case converter, slug generator — instant, no server needed." />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <style>
+    .tool-page { max-width: 900px; margin: 0 auto; padding: var(--space-xl); }
+    .text-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-lg); }
+    .stats-grid  { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-sm); margin-top: var(--space-md); }
+    .stat-card   { background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: var(--radius-md);
+                   padding: 12px; text-align: center; transition: all var(--transition-fast); }
+    .stat-card:hover { border-color: rgba(108,99,255,0.3); }
+    .stat-num    { font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: var(--accent-cyan); }
+    .stat-lbl    { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+    .modes-grid  { display: grid; grid-template-columns: repeat(3,1fr); gap: var(--space-sm); margin: var(--space-md) 0; }
+    .mode-btn    {
+      padding: 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);
+      color: var(--text-secondary); font-size: 0.82rem; font-weight: 500; cursor: pointer;
+      transition: all var(--transition-fast); text-align: center; font-family: var(--font-body);
+    }
+    .mode-btn:hover { background: rgba(108,99,255,0.15); border-color: var(--accent-purple); color: var(--accent-purple); }
+    .instant-badge { font-size: 0.72rem; color: var(--accent-green); background: rgba(0,255,163,0.1);
+                     border: 1px solid rgba(0,255,163,0.25); padding: 2px 10px; border-radius: var(--radius-full);
+                     display: inline-block; margin-bottom: 8px; }
+    @media (max-width: 640px) {
+      .text-layout { grid-template-columns: 1fr; }
+      .stats-grid  { grid-template-columns: repeat(2,1fr); }
+      .modes-grid  { grid-template-columns: repeat(2,1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div><span>ToolsHub</span>
+  </a>
+  <a href="../../index.html" class="nav-back-btn">← Back to Home</a>
+</nav>
+
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon-big bg-text animate-float">✏️</div>
+    <div class="instant-badge">⚡ 100% Instant — No Server</div>
+    <h1>Text Tools</h1>
+    <p style="margin-top:8px;">Word count, case convert, slug banao — type karo aur instantly result dekho!</p>
+  </div>
+
+  <div class="text-layout animate-fadeInUp delay-1">
+
+    <!-- Input Side -->
+    <div class="card">
+      <div class="input-group">
+        <label>Apna Text Yahan Daalen <small style="color:var(--text-muted)">(live analysis)</small></label>
+        <textarea id="txt-input" class="input" rows="12"
+                  placeholder="Type karo ya paste karo — instantly stats update honge..."
+                  oninput="analyzeText()"></textarea>
+      </div>
+      <div class="flex gap-sm">
+        <button class="btn btn-secondary btn-sm"
+                onclick="document.getElementById('txt-input').value=''; analyzeText()">🗑️ Clear</button>
+        <button class="btn btn-secondary btn-sm"
+                onclick="copyToClipboard(document.getElementById('txt-input').value,'Text copy ho gaya!')">📋 Copy</button>
+      </div>
+
+      <!-- Live Stats -->
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card"><div class="stat-num" id="s-words">0</div><div class="stat-lbl">Words</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-chars">0</div><div class="stat-lbl">Characters</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-chars-ns">0</div><div class="stat-lbl">Chars (no space)</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-sentences">0</div><div class="stat-lbl">Sentences</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-paras">0</div><div class="stat-lbl">Paragraphs</div></div>
+        <div class="stat-card"><div class="stat-num" id="s-read">0s</div><div class="stat-lbl">Read Time</div></div>
+      </div>
+    </div>
+
+    <!-- Convert Side -->
+    <div class="card">
+      <h4 style="margin-bottom: var(--space-md);">⚡ Text Convert Karo (Instant)</h4>
+      <div class="modes-grid">
+        <button class="mode-btn" onclick="convertText('upper')">UPPERCASE</button>
+        <button class="mode-btn" onclick="convertText('lower')">lowercase</button>
+        <button class="mode-btn" onclick="convertText('title')">Title Case</button>
+        <button class="mode-btn" onclick="convertText('sentence')">Sentence case</button>
+        <button class="mode-btn" onclick="convertText('reverse')">esreveR</button>
+        <button class="mode-btn" onclick="convertText('slug')">slug-case</button>
+        <button class="mode-btn" onclick="convertText('camel')">camelCase</button>
+        <button class="mode-btn" onclick="convertText('no_spaces')">NoSpaces</button>
+        <button class="mode-btn" onclick="convertText('trim')">Trim Lines</button>
+        <button class="mode-btn" onclick="convertText('no_dupes')">Remove Dupes</button>
+        <button class="mode-btn" onclick="convertText('sort')">Sort Lines</button>
+        <button class="mode-btn" onclick="convertText('count_words')">Word Freq</button>
+      </div>
+
+      <div class="input-group">
+        <label>Result</label>
+        <textarea id="txt-output" class="input" rows="7" readonly
+                  placeholder="Upar koi button dabao — result yahan aayega..."></textarea>
+      </div>
+      <button class="btn btn-cyan btn-full"
+              onclick="copyToClipboard(document.getElementById('txt-output').value,'Result copy ho gaya!')">
+        📋 Copy Result
+      </button>
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>Made by <strong style="color:#F5A623">XON</strong> &nbsp;&middot;&nbsp; <a href="../../index.html">All Tools</a></p>
+</footer>
+
+<script src="../../assets/js/global.js"></script>
+<script>
+  function analyzeText() {
+    const text = document.getElementById('txt-input').value;
+    const words     = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const chars     = text.length;
+    const charsNs   = text.replace(/\s/g,'').length;
+    const sentences = text.trim() ? text.split(/[.!?]+/).filter(s=>s.trim()).length : 0;
+    const paras     = text.trim() ? text.split(/\n\n+/).filter(p=>p.trim()).length : 0;
+    const readSec   = Math.round(words / 200 * 60);
+
+    document.getElementById('s-words').textContent     = words.toLocaleString();
+    document.getElementById('s-chars').textContent     = chars.toLocaleString();
+    document.getElementById('s-chars-ns').textContent  = charsNs.toLocaleString();
+    document.getElementById('s-sentences').textContent = sentences.toLocaleString();
+    document.getElementById('s-paras').textContent     = paras.toLocaleString();
+    document.getElementById('s-read').textContent      = readSec < 60 ? readSec+'s' : Math.round(readSec/60)+'m';
+  }
+
+  function toTitleCase(str) {
+    return str.replace(/\w\S*/g, t => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase());
+  }
+
+  function toCamelCase(str) {
+    return str.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (m,i) => i===0 ? m.toLowerCase() : m.toUpperCase()).replace(/\s+/g,'');
+  }
+
+  function toSlug(str) {
+    return str.toLowerCase().replace(/[^a-z0-9\s-]/g,'').trim().replace(/\s+/g,'-');
+  }
+
+  function wordFreq(str) {
+    const freq = {};
+    str.toLowerCase().split(/\s+/).forEach(w => { w = w.replace(/[^a-z]/g,''); if(w) freq[w]=(freq[w]||0)+1; });
+    return Object.entries(freq).sort((a,b)=>b[1]-a[1]).map(([w,c])=>`${w}: ${c}`).join('\n');
+  }
+
+  function convertText(mode) {
+    const text = document.getElementById('txt-input').value;
+    if (!text.trim()) { showToast('Pehle text daalen', 'error'); return; }
+
+    const ops = {
+      upper:      () => text.toUpperCase(),
+      lower:      () => text.toLowerCase(),
+      title:      () => toTitleCase(text),
+      sentence:   () => text.charAt(0).toUpperCase() + text.slice(1).toLowerCase(),
+      reverse:    () => text.split('').reverse().join(''),
+      slug:       () => toSlug(text),
+      camel:      () => toCamelCase(text),
+      no_spaces:  () => text.replace(/\s/g,''),
+      trim:       () => text.split('\n').map(l=>l.trim()).join('\n'),
+      no_dupes:   () => [...new Set(text.split('\n'))].join('\n'),
+      sort:       () => text.split('\n').sort().join('\n'),
+      count_words:() => wordFreq(text),
+    };
+
+    const result = ops[mode] ? ops[mode]() : text;
+    document.getElementById('txt-output').value = result;
+    showToast('Convert ho gaya!', 'success');
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Password Generator — ToolsHub</title>
+  <meta name="description" content="Ultra-strong random password generator — custom length, special characters, bulk generate!" />
+  <link rel="stylesheet" href="../../assets/css/global.css" />
+  <style>
+    .tool-page { max-width: 700px; margin: 0 auto; padding: var(--space-xl); }
+    .password-display {
+      background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
+      font-family: 'Courier New', monospace; font-size: 1.15rem;
+      color: var(--accent-cyan); letter-spacing: 0.05em; word-break: break-all;
+      min-height: 56px; cursor: pointer; transition: all var(--transition-fast);
+    }
+    .password-display:hover { border-color: var(--accent-purple); }
+    .strength-bar  { height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; margin: var(--space-sm) 0; }
+    .strength-fill { height: 100%; border-radius: 4px; transition: all 0.4s ease; }
+    .options-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-md); }
+    .checkbox-item {
+      display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) var(--space-md);
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md);
+      cursor: pointer; transition: all var(--transition-fast); user-select: none;
+    }
+    .checkbox-item:hover { border-color: var(--accent-purple); background: rgba(108,99,255,0.08); }
+    .checkbox-item input[type="checkbox"] { accent-color: var(--accent-purple); width: 16px; height: 16px; cursor: pointer; }
+    .passwords-list { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-md); }
+    .pwd-item {
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: var(--radius-md);
+      padding: 10px 16px; font-family: monospace; font-size: 0.9rem; color: var(--text-secondary); gap: var(--space-sm);
+      transition: all var(--transition-fast);
+    }
+    .pwd-item:hover { border-color: rgba(108,99,255,0.3); }
+    .pwd-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pwd-copy { cursor: pointer; font-size: 1.1rem; transition: transform var(--transition-fast); opacity: 0.7; }
+    .pwd-copy:hover { transform: scale(1.2); opacity: 1; }
+    @media (max-width: 500px) { .options-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="../../index.html" class="nav-logo">
+    <div class="logo-icon">🛠️</div><span>ToolsHub</span>
+  </a>
+  <a href="../../index.html" class="nav-back-btn">← Back to Home</a>
+</nav>
+
+<div class="tool-page">
+  <div class="tool-header">
+    <div class="tool-icon-big bg-password animate-float">🔒</div>
+    <h1>Password Generator</h1>
+    <p style="margin-top:8px;">Ultra-strong, cryptographically secure passwords — ek click mein, instantly!</p>
+  </div>
+
+  <div class="card animate-fadeInUp delay-1">
+    <!-- Single password preview (click to copy) -->
+    <div class="password-display" id="single-pwd" title="Click to copy" onclick="copySingle()">
+      Click "Generate" to start...
+    </div>
+
+    <!-- Strength -->
+    <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:0.8rem;color:var(--text-muted);">
+      <span id="strength-label">—</span>
+      <span id="charset-info">—</span>
+    </div>
+
+    <!-- Length -->
+    <div class="input-group mt-md">
+      <label>Password Length: <strong id="length-val">16</strong></label>
+      <input type="range" id="pwd-length" min="4" max="128" value="16" step="1"
+             style="width:100%; accent-color: var(--accent-purple);"
+             oninput="document.getElementById('length-val').textContent=this.value; generateAll()" />
+    </div>
+
+    <!-- Options -->
+    <div class="options-grid mb-md">
+      <label class="checkbox-item">
+        <input type="checkbox" id="use-upper" checked onchange="generateAll()" />
+        A–Z Uppercase
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="use-lower" checked onchange="generateAll()" />
+        a–z Lowercase
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="use-nums" checked onchange="generateAll()" />
+        0–9 Numbers
+      </label>
+      <label class="checkbox-item">
+        <input type="checkbox" id="use-symbols" checked onchange="generateAll()" />
+        !@#$ Symbols
+      </label>
+    </div>
+
+    <!-- Count -->
+    <div class="input-group">
+      <label>Generate Kitne: <strong id="count-val">5</strong></label>
+      <input type="range" id="pwd-count" min="1" max="20" value="5" step="1"
+             style="width:100%; accent-color: var(--accent-purple);"
+             oninput="document.getElementById('count-val').textContent=this.value; generateAll()" />
+    </div>
+
+    <div style="display:flex; gap: var(--space-sm);">
+      <button class="btn btn-primary" style="flex:1" onclick="generateAll()" id="gen-btn">🔐 Generate</button>
+      <button class="btn btn-cyan" onclick="copyAll()">📋 Copy All</button>
+    </div>
+  </div>
+
+  <!-- Password list -->
+  <div id="pwd-list-section" style="display:none;" class="mt-md">
+    <div class="passwords-list" id="passwords-list"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <p>Made by <strong style="color:#F5A623">XON</strong> &nbsp;&middot;&nbsp; <a href="../../index.html">All Tools</a></p>
+</footer>
+
+<script src="../../assets/js/global.js"></script>
+<script>
+  const UPPER   = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const LOWER   = 'abcdefghijklmnopqrstuvwxyz';
+  const NUMS    = '0123456789';
+  const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+  const STRENGTH_COLORS = ['#FF4444','#FF7700','#FFD700','#7EC8E3','#43E97B','#00FFA3'];
+  const STRENGTH_LABELS = ['Very Weak','Weak','Fair','Good','Strong','Very Strong'];
+
+  let currentPasswords = [];
+
+  function secureRandom(max) {
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return arr[0] % max;
+  }
+
+  function generateOne(charset, length) {
+    let pwd = '';
+    for (let i = 0; i < length; i++) pwd += charset[secureRandom(charset.length)];
+    return pwd;
+  }
+
+  function getCharset() {
+    let cs = '';
+    if (document.getElementById('use-upper').checked)   cs += UPPER;
+    if (document.getElementById('use-lower').checked)   cs += LOWER;
+    if (document.getElementById('use-nums').checked)    cs += NUMS;
+    if (document.getElementById('use-symbols').checked) cs += SYMBOLS;
+    return cs;
+  }
+
+  function calcStrength(length, charset) {
+    let s = 0;
+    if (length >= 8)  s++;
+    if (length >= 12) s++;
+    if (length >= 16) s++;
+    if (charset.match(/[A-Z]/) && charset.match(/[a-z]/)) s++;
+    if (charset.match(/[0-9]/)) s++;
+    if (charset.match(/[^a-zA-Z0-9]/)) s++;
+    return Math.min(s, 5);
+  }
+
+  function generateAll() {
+    const charset = getCharset();
+    const length  = parseInt(document.getElementById('pwd-length').value);
+    const count   = parseInt(document.getElementById('pwd-count').value);
+
+    if (!charset) { showToast('Kam az kam ek option select karo', 'error'); return; }
+
+    // Generate passwords ensuring at least one char from each selected type
+    currentPasswords = [];
+    for (let i = 0; i < count; i++) {
+      let pwd;
+      do { pwd = generateOne(charset, length); } while (!isValid(pwd));
+      currentPasswords.push(pwd);
+    }
+
+    // Show first password in preview
+    document.getElementById('single-pwd').textContent = currentPasswords[0];
+
+    // Strength
+    const s = calcStrength(length, charset);
+    document.getElementById('strength-fill').style.width      = `${(s/5)*100}%`;
+    document.getElementById('strength-fill').style.background = STRENGTH_COLORS[s];
+    document.getElementById('strength-label').textContent     = STRENGTH_LABELS[s];
+    document.getElementById('strength-label').style.color     = STRENGTH_COLORS[s];
+    document.getElementById('charset-info').textContent       = `${charset.length} possible chars`;
+
+    // List
+    const list = document.getElementById('passwords-list');
+    list.innerHTML = '';
+    currentPasswords.forEach(pwd => {
+      const div = document.createElement('div');
+      div.className = 'pwd-item';
+      div.innerHTML = `<span class="pwd-text">${pwd}</span>
+        <span class="pwd-copy" title="Copy" onclick="copyToClipboard('${pwd.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}','Password copy ho gaya!')">📋</span>`;
+      list.appendChild(div);
+    });
+    document.getElementById('pwd-list-section').style.display = 'block';
+  }
+
+  function isValid(pwd) {
+    const upper   = document.getElementById('use-upper').checked;
+    const lower   = document.getElementById('use-lower').checked;
+    const nums    = document.getElementById('use-nums').checked;
+    const symbols = document.getElementById('use-symbols').checked;
+    if (upper   && !pwd.match(/[A-Z]/)) return false;
+    if (lower   && !pwd.match(/[a-z]/)) return false;
+    if (nums    && !pwd.match(/[0-9]/)) return false;
+    if (symbols && !pwd.match(/[^a-zA-Z0-9]/)) return false;
+    return true;
+  }
+
+  function copySingle() {
+    const p = document.getElementById('single-pwd').textContent;
+    if (p && p !== 'Click "Generate" to start...') copyToClipboard(p, 'Password copy ho gaya!');
+  }
+
+  function copyAll() {
+    if (!currentPasswords.length) { showToast('Pehle generate karo', 'error'); return; }
+    copyToClipboard(currentPasswords.join('\n'), 'Saare passwords copy ho gaye!');
+  }
+
+  // Auto-generate on load
+  window.addEventListener('DOMContentLoaded', generateAll);
+</script>
+</body>
+</html>
