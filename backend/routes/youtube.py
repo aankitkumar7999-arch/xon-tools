@@ -44,11 +44,29 @@ def get_info():
     if not is_valid_url(url):
         return jsonify({'error': 'Valid YouTube URL chahiye'}), 400
 
-    ydl_opts = {'quiet': True, 'no_warnings': True}
+    ydl_opts = {
+        'quiet':       True,
+        'no_warnings': True,
+        # ── Bot bypass for server IPs ──
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['mweb', 'android', 'web_creator'],
+                'player_skip':   ['webpage', 'configs'],
+            }
+        },
+        'http_headers': {
+            'User-Agent': (
+                'Mozilla/5.0 (Linux; Android 11; Pixel 5) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) '
+                'Chrome/120.0.0.0 Mobile Safari/537.36'
+            ),
+        },
+    }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+
 
         formats = []
         seen_v = set()
